@@ -1,0 +1,137 @@
+---
+title: "Data 607 Assignment 3"
+author: "Jayden Jiang"
+date: "2024-10-09"
+output: html_document
+---
+
+## Library 
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+## Load Data
+
+```{r}
+children_supply <- read.csv ("https://raw.githubusercontent.com/JaydeeJan/Children-Supply/refs/heads/main/Childcare_Need___Supply__All_.csv")
+
+head(children_supply)
+tail(children_supply)
+```
+
+```{r}
+glimpse(children_supply)
+```
+## Replacing N/A to empty values 
+```{r}
+children_supply[children_supply == ""] <- NA
+head(children_supply,10)
+tail(children_supply,10)
+```
+## First Normal Form (1NF) sort the data by Percent Need Met from min. to max.
+#### 1. Using row order to convey information is not permitted.
+#### 2. Mixing data types within the same column is not permitted.
+#### 3. Having a table without a primary key is not permitted.
+#### 4. Repeating groups are not permitted.
+```{r}
+percent_met <- children_supply %>% arrange(`Percent.Need.Met`)
+filtered_percentmet <- percent_met %>% filter(`Percent.Need.Met` !=0)
+head(filtered_percentmet,10)
+tail(filtered_percentmet,10)
+```
+## Second Normal Form (2NF)
+#### Each non-key attribute in the table must be dependent on the entire primary key. 
+```{r}
+# Geographic Table
+geographic_table <- filtered_percentmet %>%
+  select(`Geographic.Unit`, `Geographic.ID`, `Geographic.Name`)
+head(geographic_table,10)
+```
+```{r}
+# Childcare-related info. table
+childcare_table <- filtered_percentmet %>%
+  select(`Geographic.ID`, `State.Median.Income.Bracket`, `Age.Group`, `Estimated.Children.Receiving.Childcare`, `Estimate.of.Unserved`, `Percent.Need.Met`)
+head(childcare_table, 10)
+tail(childcare_table, 10)
+```
+
+## Fourth Normal Form (4NF)
+#### The only kinds of multivalued dependency allowed in a table are multivalued dependencies on the key. 
+```{r}
+median_income <- unique(childcare_table[, c("Geographic.ID", "State.Median.Income.Bracket")])
+income_sorted <- median_income[order(median_income$Geographic.ID), ]
+head(income_sorted, 10)
+tail(income_sorted, 10)
+```
+```{r}
+age_group <- unique(childcare_table[, c("Geographic.ID", "Age.Group")])
+age_sorted <- age_group[order(age_group$Geographic.ID), ]
+head(age_sorted, 10)
+tail(age_sorted, 10)
+```
+## Character Manipulation
+
+#### 2. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+```{r}
+listed_majors <- read.csv ("https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/college-majors/majors-list.csv")
+
+head(listed_majors)
+tail(listed_majors)
+
+# use grepl to filter rows where the Major column contains "DATA" or "STATISTICS"
+filtered_majors <- listed_majors[grepl("DATA|STATISTICS", listed_majors$Major, ignore.case = TRUE), ]
+
+print(filtered_majors)
+
+```
+
+## Describe, in words, what these expressions will match:
+
+### (.)\1\1
+#### 1. (.) - will match any single character in first group
+#### 2. \1 - refers to the match contained in the first parenthesis
+#### 3. \1\1 - character repeated two or more times. 
+
+
+
+### "(.)(.)\\2\\1"
+#### 1. (.)(.) - will match any single character in first group and second group
+#### 2. \\2 refers to the match contained in the second parenthesis
+#### 3. \\1 refers to the match contained in the first parenthesis
+
+### (..)\1
+#### 1. (..) - match with two characters
+#### 2. \1 - refers to the match contained in the first parenthesis
+
+### "(.).\\1.\\1"
+#### 1. (.) -  will match any single character in first group
+#### 2. . - match any character
+#### 3. \\1 - refers to the match contained in the first parenthesis
+#### 4. . - match any character
+#### 5. \\1 - refers to the match contained in the first parenthesis
+
+### "(.)(.)(.).*\\3\\2\\1"
+#### 1. (.) - will match any single character in first group
+#### 2. (.) - will match any single character in second group
+#### 3. (.) - will match any single character in third group
+#### 4. .* - will match any sequence of characters
+#### 5. \\3 - refers to the match contained in the third parenthesis
+#### 6. \\2 - refers to the match contained in the second parenthesis
+#### 7. \\1 - refers to the match contained in the first parenthesis
+
+
+
+## Construct regular expressions to match words that:
+
+#### Start and end with the same character.
+#### (.)\1
+
+#### Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+#### "(..).*\\1"
+
+#### Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+#### "(.)\\1.*\\1"
+
+
